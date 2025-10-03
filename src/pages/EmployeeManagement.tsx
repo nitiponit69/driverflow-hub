@@ -20,7 +20,7 @@ const statusOptions: { value: EmployeeStatus; label: string }[] = [
 ];
 
 export default function EmployeeManagement() {
-  const { getEmployeesByStatus, updateEmployee, addComment } = useEmployees();
+  const { getEmployeesByStatus, updateEmployee, addComment, employees } = useEmployees();
   const managementEmployees = getEmployeesByStatus([
     "screening",
     "ส่งสัมภาษณ์",
@@ -32,6 +32,25 @@ export default function EmployeeManagement() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<EmployeeStatus | "">("");
+  const [filterAssignedTo, setFilterAssignedTo] = useState<string>("all");
+  const [filterJobType, setFilterJobType] = useState<string>("all");
+  const [filterDepartment, setFilterDepartment] = useState<string>("all");
+  const [filterRecruiter, setFilterRecruiter] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+
+  const assignedToList = Array.from(new Set(employees.map(e => e.assignedTo).filter(Boolean))) as string[];
+  const departments = Array.from(new Set(employees.map(e => e.department)));
+  const recruiters = Array.from(new Set(employees.map(e => e.recruiter)));
+
+  const filteredEmployees = managementEmployees.filter((emp) => {
+    const matchesAssignedTo = filterAssignedTo === "all" || emp.assignedTo === filterAssignedTo;
+    const matchesJobType = filterJobType === "all" || emp.jobType === filterJobType;
+    const matchesDepartment = filterDepartment === "all" || emp.department === filterDepartment;
+    const matchesRecruiter = filterRecruiter === "all" || emp.recruiter === filterRecruiter;
+    const matchesStatus = filterStatus === "all" || emp.status === filterStatus;
+
+    return matchesAssignedTo && matchesJobType && matchesDepartment && matchesRecruiter && matchesStatus;
+  });
 
   const handleUpdateStatus = (employee: Employee) => {
     setSelectedEmployee(employee);
@@ -76,14 +95,78 @@ export default function EmployeeManagement() {
         </p>
       </div>
 
-      {managementEmployees.length === 0 ? (
+      <div className="flex flex-wrap gap-4 p-4 bg-card rounded-xl shadow-card mb-4">
+        <Select value={filterAssignedTo} onValueChange={setFilterAssignedTo}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="ผู้รับผิดชอบ" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">ทุกคน</SelectItem>
+            {assignedToList.map(person => (
+              <SelectItem key={person} value={person}>{person}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={filterJobType} onValueChange={setFilterJobType}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="ประเภทงาน" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">ทุกประเภท</SelectItem>
+            <SelectItem value="ส่วนกลาง">ส่วนกลาง</SelectItem>
+            <SelectItem value="ผู้บริหารคนไทย">ผู้บริหารคนไทย</SelectItem>
+            <SelectItem value="ผู้บริหารต่างชาติ">ผู้บริหารต่างชาติ</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="หน่วยงาน" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">ทุกหน่วยงาน</SelectItem>
+            {departments.map(dept => (
+              <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={filterRecruiter} onValueChange={setFilterRecruiter}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="ผู้รับสมัคร" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">ทุกคน</SelectItem>
+            {recruiters.map(rec => (
+              <SelectItem key={rec} value={rec}>{rec}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="สถานะ" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">ทุกสถานะ</SelectItem>
+            <SelectItem value="screening">คัดกรอง</SelectItem>
+            <SelectItem value="ส่งสัมภาษณ์">ส่งสัมภาษณ์</SelectItem>
+            <SelectItem value="รับจ๊อบรายวัน">รับจ๊อบรายวัน</SelectItem>
+            <SelectItem value="ประเมิน">ประเมิน</SelectItem>
+            <SelectItem value="ไม่ผ่านสัมภาษณ์">ไม่ผ่านสัมภาษณ์</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {filteredEmployees.length === 0 ? (
         <div className="text-center py-12 bg-card rounded-xl shadow-card">
           <Settings2 className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
           <p className="text-lg font-medium">ไม่มีพนักงานที่ต้องจัดการ</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {managementEmployees.map((employee) => (
+          {filteredEmployees.map((employee) => (
             <div key={employee.id} className="bg-card rounded-xl shadow-card p-6 space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 <div>

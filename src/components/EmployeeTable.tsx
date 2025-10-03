@@ -22,6 +22,8 @@ export const EmployeeTable = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [filterJobType, setFilterJobType] = useState<string>("all");
   const [filterDepartment, setFilterDepartment] = useState<string>("all");
+  const [filterDateFrom, setFilterDateFrom] = useState<string>("");
+  const [filterDateTo, setFilterDateTo] = useState<string>("");
 
   const filteredEmployees = employees.filter((emp) => {
     const matchesSearch = 
@@ -31,8 +33,12 @@ export const EmployeeTable = ({
     
     const matchesJobType = filterJobType === "all" || emp.jobType === filterJobType;
     const matchesDepartment = filterDepartment === "all" || emp.department === filterDepartment;
+    
+    const empDate = new Date(emp.applicationDate);
+    const matchesDateFrom = !filterDateFrom || empDate >= new Date(filterDateFrom);
+    const matchesDateTo = !filterDateTo || empDate <= new Date(filterDateTo);
 
-    return matchesSearch && matchesJobType && matchesDepartment;
+    return matchesSearch && matchesJobType && matchesDepartment && matchesDateFrom && matchesDateTo;
   });
 
   const departments = Array.from(new Set(employees.map(e => e.department)));
@@ -73,6 +79,24 @@ export const EmployeeTable = ({
             ))}
           </SelectContent>
         </Select>
+
+        <div className="flex gap-2 items-center">
+          <Input
+            type="date"
+            value={filterDateFrom}
+            onChange={(e) => setFilterDateFrom(e.target.value)}
+            className="w-[160px]"
+            placeholder="วันที่เริ่มต้น"
+          />
+          <span className="text-muted-foreground">ถึง</span>
+          <Input
+            type="date"
+            value={filterDateTo}
+            onChange={(e) => setFilterDateTo(e.target.value)}
+            className="w-[160px]"
+            placeholder="วันที่สิ้นสุด"
+          />
+        </div>
       </div>
 
       <div className="bg-card rounded-xl shadow-card overflow-hidden">
